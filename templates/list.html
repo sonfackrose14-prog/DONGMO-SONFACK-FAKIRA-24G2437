@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlightLog — Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --rose-deep:   #993556;
+            --rose-mid:    #D4537E;
+            --rose-soft:   #ED93B1;
+            --rose-pale:   #FBEAF0;
+            --rose-border: #F4C0D1;
+            --white:       #ffffff;
+            --bg:          #fff0f6;
+            --text-dark:   #2d1b25;
+            --text-mid:    #6d3a50;
+            --text-light:  #b07090;
+            --border:      #f8bbd0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            padding: 32px 20px 60px;
+            background-image:
+                radial-gradient(ellipse at 10% 10%, rgba(212,83,126,0.07) 0%, transparent 55%),
+                radial-gradient(ellipse at 90% 90%, rgba(153,53,86,0.05) 0%, transparent 55%);
+        }
+
+        .container { max-width: 1060px; margin: 0 auto; }
+
+        /* ── HEADER ── */
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .brand { display: flex; align-items: center; gap: 12px; }
+
+        .brand-icon {
+            width: 40px; height: 40px;
+            background: linear-gradient(135deg, var(--rose-mid), var(--rose-deep));
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px;
+        }
+
+        .brand-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem;
+            color: var(--rose-deep);
+            line-height: 1.2;
+        }
+
+        .brand-sub { font-size: 0.82rem; color: var(--text-light); font-weight: 300; }
+
+        .header-right { display: flex; align-items: center; gap: 10px; }
+
+        .badge {
+            font-size: 0.82rem;
+            background: var(--rose-pale);
+            color: var(--rose-deep);
+            border: 1px solid var(--rose-border);
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--rose-mid), var(--rose-deep));
+            color: var(--white);
+            text-decoration: none;
+            padding: 9px 18px;
+            border-radius: 12px;
+            font-size: 0.88rem;
+            font-weight: 500;
+            transition: opacity 0.2s, transform 0.15s;
+            box-shadow: 0 4px 12px rgba(153,53,86,0.22);
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+
+        .btn:hover { opacity: 0.90; transform: translateY(-1px); }
+
+        /* ── METRIC CARDS ── */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .metric {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px 18px;
+        }
+
+        .metric-label { font-size: 0.75rem; color: var(--text-light); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .metric-value { font-size: 1.7rem; font-weight: 500; color: var(--text-dark); line-height: 1; }
+        .metric-value.accent { color: var(--rose-mid); }
+        .metric-sub { font-size: 0.75rem; color: var(--text-light); margin-top: 4px; font-weight: 300; }
+
+        /* ── CHART CARDS ── */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+
+        .chart-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 18px 20px;
+        }
+
+        .chart-card.full { grid-column: 1 / -1; }
+
+        .chart-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .chart-title { font-size: 0.95rem; font-weight: 500; color: var(--text-dark); }
+        .chart-period { font-size: 0.78rem; color: var(--text-light); }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            font-size: 0.75rem;
+            color: var(--text-mid);
+            margin-bottom: 12px;
+        }
+
+        .legend span { display: flex; align-items: center; gap: 5px; }
+
+        .legend-dot {
+            width: 10px; height: 10px;
+            border-radius: 2px;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+
+        /* ── RECENT TABLE ── */
+        .table-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 18px 20px;
+        }
+
+        .table-row {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr 70px 110px 100px;
+            gap: 8px;
+            padding: 11px 0;
+            border-bottom: 1px solid var(--rose-pale);
+            align-items: center;
+            font-size: 0.85rem;
+        }
+
+        .table-row:last-child { border-bottom: none; }
+
+        .table-head {
+            font-size: 0.72rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 500;
+        }
+
+        .route-pill { display: inline-flex; align-items: center; gap: 5px; }
+
+        .airport {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--rose-deep);
+            background: var(--rose-pale);
+            padding: 2px 8px;
+            border-radius: 6px;
+            letter-spacing: 0.3px;
+        }
+
+        .arr { font-size: 0.75rem; color: var(--text-light); }
+        .dur { font-weight: 500; color: var(--rose-mid); }
+        .muted { color: var(--text-light); font-size: 0.8rem; }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-light);
+        }
+
+        .empty-state .emo { font-size: 2.8rem; margin-bottom: 14px; opacity: 0.45; }
+        .empty-state p { font-size: 0.95rem; }
+        .empty-state small { font-size: 0.82rem; }
+
+        @media (max-width: 640px) {
+            .charts-grid { grid-template-columns: 1fr; }
+            .charts-grid .chart-card.full { grid-column: 1; }
+            .table-row { grid-template-columns: 1fr 1fr 60px; }
+            .table-row .hide-mobile { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- HEADER -->
+    <header>
+        <div class="brand">
+            <div class="brand-icon">✈️</div>
+            <div>
+                <div class="brand-title">FlightLog</div>
+                <div class="brand-sub">Monitoring &amp; analyses des vols</div>
+            </div>
+        </div>
+        <div class="header-right">
+            {% if users %}
+            <span class="badge">{{ users|length }} vol{{ 's' if users|length > 1 else '' }}</span>
+            {% endif %}
+            <a href="/" class="btn">+ Nouveau vol</a>
+        </div>
+    </header>
+
+    {% if not users %}
+    <!-- ÉTAT VIDE -->
+    <div class="empty-state">
+        <div class="emo">🛫</div>
+        <p>Aucun vol enregistré pour l'instant.</p>
+        <small>Ajoutez votre premier vol pour voir les analyses.</small>
+    </div>
+
+    {% else %}
+
+    <!-- MÉTRIQUES -->
+    <div class="metrics-grid">
+        <div class="metric">
+            <div class="metric-label">Total vols</div>
+            <div class="metric-value" id="m-total">—</div>
+            <div class="metric-sub">enregistrés</div>
+        </div>
+        <div class="metric">
+            <div class="metric-label">Heures de vol</div>
+            <div class="metric-value accent" id="m-hours">—</div>
+            <div class="metric-sub">cumulées</div>
+        </div>
+        <div class="metric">
+            <div class="metric-label">Durée moyenne</div>
+            <div class="metric-value" id="m-avg">—</div>
+            <div class="metric-sub">par vol</div>
+        </div>
+        <div class="metric">
+            <div class="metric-label">Destinations</div>
+            <div class="metric-value" id="m-routes">—</div>
+            <div class="metric-sub">uniques</div>
+        </div>
+        <div class="metric">
+            <div class="metric-label">Pilotes actifs</div>
+            <div class="metric-value" id="m-pilots">—</div>
+            <div class="metric-sub">distincts</div>
+        </div>
+    </div>
+
+    <!-- GRAPHIQUES -->
+    <div class="charts-grid">
+
+        <div class="chart-card">
+            <div class="chart-head">
+                <span class="chart-title">Vols par mois</span>
+                <span class="chart-period">12 mois</span>
+            </div>
+            <div class="legend"><span><span class="legend-dot" style="background:#D4537E"></span>Nombre de vols</span></div>
+            <div style="position:relative; width:100%; height:180px;">
+                <canvas id="chartMonthly" role="img" aria-label="Nombre de vols par mois"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-head">
+                <span class="chart-title">Durée par vol</span>
+                <span class="chart-period">5 derniers</span>
+            </div>
+            <div class="legend"><span><span class="legend-dot" style="background:#993556"></span>Heures</span></div>
+            <div style="position:relative; width:100%; height:180px;">
+                <canvas id="chartDuration" role="img" aria-label="Durée des derniers vols"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-head">
+                <span class="chart-title">Top destinations</span>
+                <span class="chart-period">Par fréquence</span>
+            </div>
+            <div id="legend-dest" class="legend"></div>
+            <div style="position:relative; width:100%; height:180px;">
+                <canvas id="chartDest" role="img" aria-label="Destinations les plus fréquentes"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-head">
+                <span class="chart-title">Vols par pilote</span>
+                <span class="chart-period">Répartition</span>
+            </div>
+            <div id="legend-pilot" class="legend"></div>
+            <div style="position:relative; width:100%; height:180px;">
+                <canvas id="chartPilot" role="img" aria-label="Répartition des vols par pilote"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card full">
+            <div class="chart-head">
+                <span class="chart-title">Heures cumulées</span>
+                <span class="chart-period">Tendance globale</span>
+            </div>
+            <div class="legend">
+                <span><span class="legend-dot" style="background:#ED93B1"></span>Heures cumulées</span>
+            </div>
+            <div style="position:relative; width:100%; height:160px;">
+                <canvas id="chartCumul" role="img" aria-label="Courbe des heures cumulées"></canvas>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- TABLEAU RÉCENTS -->
+    <div class="table-card">
+        <div class="chart-head">
+            <span class="chart-title">Derniers vols enregistrés</span>
+            <span class="chart-period" id="recent-count"></span>
+        </div>
+        <div class="table-row table-head">
+            <span>Route</span>
+            <span>Pilote</span>
+            <span>Durée</span>
+            <span class="hide-mobile">Appareil</span>
+            <span class="hide-mobile">Date</span>
+        </div>
+        <div id="table-body"></div>
+    </div>
+
+    {% endif %}
+
+</div>
+
+<!-- Injection des données Flask → JavaScript -->
+<script>
+    const FLIGHT_DATA = [
+        {% for u in users %}
+        {
+            origin: "{{ u.origin }}",
+            destination: "{{ u.destination }}",
+            duration: {{ u.duration }},
+            aircraft_tail_number: "{{ u.aircraft_tail_number }}",
+            pilot_name: "{{ u.pilot_name }}",
+            submitted_by: "{{ u.submitted_by }}",
+            date_posted: "{{ u.date_posted.strftime('%Y-%m-%d') }}"
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ];
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+    if (typeof FLIGHT_DATA !== 'undefined' && FLIGHT_DATA.length > 0) {
+
+        const ROSE = {
+            deep: '#993556',
+            mid:  '#D4537E',
+            soft: '#ED93B1',
+            pale: '#FBEAF0'
+        };
+
+        const logs = FLIGHT_DATA;
+        const fmt = (n, d=1) => parseFloat(n.toFixed(d));
+
+        // ── MÉTRIQUES ──
+        document.getElementById('m-total').textContent = logs.length;
+        const totalH = logs.reduce((s, l) => s + parseFloat(l.duration || 0), 0);
+        document.getElementById('m-hours').textContent = fmt(totalH) + ' h';
+        document.getElementById('m-avg').textContent = fmt(totalH / logs.length) + ' h';
+        document.getElementById('m-routes').textContent = [...new Set(logs.map(l => l.destination))].length;
+        document.getElementById('m-pilots').textContent = [...new Set(logs.map(l => l.pilot_name))].length;
+
+        // ── VOLS PAR MOIS ──
+        const months = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+        const byCounts = Array(12).fill(0);
+        logs.forEach(l => { byCounts[new Date(l.date_posted).getMonth()]++; });
+
+        new Chart(document.getElementById('chartMonthly'), {
+            type: 'bar',
+            data: {
+                labels: months,
+                datasets: [{ label: 'Vols', data: byCounts, backgroundColor: ROSE.mid, borderRadius: 4, borderSkipped: false }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+                    y: { beginAtZero: true, grid: { color: 'rgba(153,53,86,0.07)' }, ticks: { stepSize: 1, font: { size: 11 } } }
+                }
+            }
+        });
+
+        // ── DURÉE 5 DERNIERS VOLS ──
+        const last5 = logs.slice(-5);
+        const durLabels = last5.map((_, i) => `Vol ${logs.length - 4 + i}`);
+        const durData   = last5.map(l => fmt(parseFloat(l.duration)));
+
+        new Chart(document.getElementById('chartDuration'), {
+            type: 'line',
+            data: {
+                labels: durLabels,
+                datasets: [{
+                    label: 'Durée (h)', data: durData,
+                    borderColor: ROSE.deep, backgroundColor: 'rgba(153,53,86,0.10)',
+                    fill: true, tension: 0.4,
+                    pointBackgroundColor: ROSE.deep, pointRadius: 5
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+                    y: { beginAtZero: true, grid: { color: 'rgba(153,53,86,0.07)' }, ticks: { font: { size: 11 } } }
+                }
+            }
+        });
+
+        // ── TOP DESTINATIONS ──
+        const destMap = {};
+        logs.forEach(l => { destMap[l.destination] = (destMap[l.destination] || 0) + 1; });
+        const destSorted  = Object.entries(destMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
+        const destColors  = ['#993556', '#D4537E', '#ED93B1', '#F4C0D1', '#FBEAF0'];
+
+        const legendDest = document.getElementById('legend-dest');
+        destSorted.forEach(([k, v], i) => {
+            legendDest.innerHTML += `<span><span class="legend-dot" style="background:${destColors[i]}"></span>${k} (${v})</span>`;
+        });
+
+        new Chart(document.getElementById('chartDest'), {
+            type: 'doughnut',
+            data: {
+                labels: destSorted.map(d => d[0]),
+                datasets: [{ data: destSorted.map(d => d[1]), backgroundColor: destColors, borderWidth: 2, borderColor: '#fff' }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, cutout: '62%',
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // ── PILOTES ──
+        const pilotMap = {};
+        logs.forEach(l => { pilotMap[l.pilot_name] = (pilotMap[l.pilot_name] || 0) + 1; });
+        const pilotSorted = Object.entries(pilotMap).sort((a, b) => b[1] - a[1]);
+        const pilotColors = ['#993556', '#D4537E', '#ED93B1', '#F4C0D1'];
+
+        const legendPilot = document.getElementById('legend-pilot');
+        pilotSorted.forEach(([k, v], i) => {
+            legendPilot.innerHTML += `<span><span class="legend-dot" style="background:${pilotColors[i % 4]}"></span>${k} (${v})</span>`;
+        });
+
+        new Chart(document.getElementById('chartPilot'), {
+            type: 'bar',
+            data: {
+                labels: pilotSorted.map(p => p[0]),
+                datasets: [{ label: 'Vols', data: pilotSorted.map(p => p[1]), backgroundColor: pilotColors.slice(0, pilotSorted.length), borderRadius: 4, borderSkipped: false }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { beginAtZero: true, grid: { color: 'rgba(153,53,86,0.07)' }, ticks: { stepSize: 1, font: { size: 11 } } },
+                    y: { grid: { display: false }, ticks: { font: { size: 11 } } }
+                }
+            }
+        });
+
+        // ── HEURES CUMULÉES ──
+        const sorted  = logs.slice().sort((a, b) => new Date(a.date_posted) - new Date(b.date_posted));
+        let cum = 0;
+        const cumLabels = sorted.map(l => {
+            const d = new Date(l.date_posted);
+            return `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}`;
+        });
+        const cumData = sorted.map(l => { cum += parseFloat(l.duration || 0); return fmt(cum); });
+
+        new Chart(document.getElementById('chartCumul'), {
+            type: 'line',
+            data: {
+                labels: cumLabels,
+                datasets: [{
+                    label: 'Heures cumulées', data: cumData,
+                    borderColor: ROSE.soft, backgroundColor: 'rgba(237,147,177,0.15)',
+                    fill: true, tension: 0.4,
+                    pointRadius: 3, pointBackgroundColor: ROSE.soft
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { size: 10 }, maxTicksLimit: 10 } },
+                    y: { beginAtZero: true, grid: { color: 'rgba(153,53,86,0.07)' }, ticks: { font: { size: 11 } } }
+                }
+            }
+        });
+
+        // ── TABLEAU RÉCENTS ──
+        const recent = logs.slice(-5).reverse();
+        document.getElementById('recent-count').textContent = `${recent.length} derniers`;
+        const tb = document.getElementById('table-body');
+        recent.forEach(l => {
+            const d = new Date(l.date_posted);
+            const dateStr = `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getFullYear()}`;
+            tb.innerHTML += `
+            <div class="table-row">
+                <span class="route-pill">
+                    <span class="airport">${l.origin}</span>
+                    <span class="arr">→</span>
+                    <span class="airport">${l.destination}</span>
+                </span>
+                <span class="muted">${l.pilot_name}</span>
+                <span class="dur">${fmt(parseFloat(l.duration))} h</span>
+                <span class="muted hide-mobile">${l.aircraft_tail_number}</span>
+                <span class="muted hide-mobile">${dateStr}</span>
+            </div>`;
+        });
+    }
+</script>
+
+</body>
+</html>
