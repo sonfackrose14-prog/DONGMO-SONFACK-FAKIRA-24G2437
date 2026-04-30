@@ -6,23 +6,21 @@ import os
 
 app = Flask(__name__, template_folder='../templates')
 
-# --- CONFIGURATION POSTGRESQL (NEON / VERCEL) ---
-# On récupère l'URL depuis les variables d'environnement de Vercel
+# --- CONFIGURATION STRICTE POSTGRESQL ---
 database_url = os.environ.get('DATABASE_URL')
 
-if database_url:
-    # Neon fournit souvent une URL commençant par postgres:// 
-    # mais SQLAlchemy exige postgresql://
-    if database_url.startswith("postgres://"):
-        database_url = database_url.replace("postgres://", "postgresql://", 1)
-    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
-else:
-    # Optionnel : Fallback sur SQLite pour le développement local uniquement
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///local.db'
+if not database_url:
+    # On lève une erreur si la variable est absente pour éviter l'erreur SQLite
+    raise RuntimeError("ERREUR : La variable d'environnement DATABASE_URL est manquante sur Vercel.")
 
+# Correction du préfixe pour SQLAlchemy
+if database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Options pour maintenir la connexion active avec Neon
+# Optimisations pour Neon (évite les timeouts et erreurs de connexion)
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_pre_ping': True,
     'pool_recycle': 280,
@@ -70,8 +68,9 @@ def submit_flight():
 # --- CONFIGURATION VERCEL ---
 app.debug = False
 
+# Note: Sur Vercel, on ne met pas db.create_all() ici.
+# On ne l'exécute qu'en local pour initialiser Neon.
 if __name__ == "__main__":
-    # Pour le test en local, on peut créer les tables automatiquement
     with app.app_context():
         db.create_all()
     app.run(debug=True)
