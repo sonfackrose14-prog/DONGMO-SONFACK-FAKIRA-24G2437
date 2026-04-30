@@ -393,59 +393,72 @@
         const fmt = (n, d=1) => parseFloat(n.toFixed(d));
 
         // ── MÉTRIQUES ──
-        document.getElementById('m-total').textContent = logs.length;
+        const mTotal = document.getElementById('m-total');
+        const mHours = document.getElementById('m-hours');
+        const mAvg = document.getElementById('m-avg');
+        const mRoutes = document.getElementById('m-routes');
+        const mPilots = document.getElementById('m-pilots');
+
+        if (mTotal) mTotal.textContent = logs.length;
+        
         const totalH = logs.reduce((s, l) => s + parseFloat(l.duration || 0), 0);
-        document.getElementById('m-hours').textContent = fmt(totalH) + ' h';
-        document.getElementById('m-avg').textContent = fmt(totalH / logs.length) + ' h';
-        document.getElementById('m-routes').textContent = [...new Set(logs.map(l => l.destination))].length;
-        document.getElementById('m-pilots').textContent = [...new Set(logs.map(l => l.pilot_name))].length;
+        if (mHours) mHours.textContent = fmt(totalH) + ' h';
+        if (mAvg) mAvg.textContent = fmt(totalH / logs.length) + ' h';
+        if (mRoutes) mRoutes.textContent = [...new Set(logs.map(l => l.destination))].length;
+        if (mPilots) mPilots.textContent = [...new Set(logs.map(l => l.pilot_name))].length;
 
         // ── VOLS PAR MOIS ──
         const months = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
         const byCounts = Array(12).fill(0);
         logs.forEach(l => { byCounts[new Date(l.date_posted).getMonth()]++; });
 
-        new Chart(document.getElementById('chartMonthly'), {
-            type: 'bar',
-            data: {
-                labels: months,
-                datasets: [{ label: 'Vols', data: byCounts, backgroundColor: ROSE.mid, borderRadius: 4, borderSkipped: false }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { grid: { display: false }, ticks: { font: { size: 11 } } },
-                    y: { beginAtZero: true, grid: { color: 'rgba(153,53,86,0.07)' }, ticks: { stepSize: 1, font: { size: 11 } } }
+        const chartMonthly = document.getElementById('chartMonthly');
+        if (chartMonthly) {
+            new Chart(chartMonthly, {
+                type: 'bar',
+                data: {
+                    labels: months,
+                    datasets: [{ label: 'Vols', data: byCounts, backgroundColor: ROSE.mid, borderRadius: 4, borderSkipped: false }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+                        y: { beginAtZero: true, grid: { color: 'rgba(153,53,86,0.07)' }, ticks: { stepSize: 1, font: { size: 11 } } }
+                    }
                 }
-            }
-        });
+            });
+        }
 
         // ── DURÉE 5 DERNIERS VOLS ──
         const last5 = logs.slice(-5);
         const durLabels = last5.map((_, i) => `Vol ${logs.length - 4 + i}`);
         const durData   = last5.map(l => fmt(parseFloat(l.duration)));
 
-        new Chart(document.getElementById('chartDuration'), {
-            type: 'line',
-            data: {
-                labels: durLabels,
-                datasets: [{
-                    label: 'Durée (h)', data: durData,
-                    borderColor: ROSE.deep, backgroundColor: 'rgba(153,53,86,0.10)',
-                    fill: true, tension: 0.4,
-                    pointBackgroundColor: ROSE.deep, pointRadius: 5
-                }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { grid: { display: false }, ticks: { font: { size: 11 } } },
-                    y: { beginAtZero: true, grid: { color: 'rgba(153,53,86,0.07)' }, ticks: { font: { size: 11 } } }
+        const chartDuration = document.getElementById('chartDuration');
+        if (chartDuration) {
+            new Chart(chartDuration, {
+                type: 'line',
+                data: {
+                    labels: durLabels,
+                    datasets: [{
+                        label: 'Durée (h)', data: durData,
+                        borderColor: ROSE.deep, backgroundColor: 'rgba(153,53,86,0.10)',
+                        fill: true, tension: 0.4,
+                        pointBackgroundColor: ROSE.deep, pointRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+                        y: { beginAtZero: true, grid: { color: 'rgba(153,53,86,0.07)' }, ticks: { font: { size: 11 } } }
+                    }
                 }
-            }
-        });
+            });
+        }
 
         // ── TOP DESTINATIONS ──
         const destMap = {};
@@ -454,21 +467,26 @@
         const destColors  = ['#993556', '#D4537E', '#ED93B1', '#F4C0D1', '#FBEAF0'];
 
         const legendDest = document.getElementById('legend-dest');
-        destSorted.forEach(([k, v], i) => {
-            legendDest.innerHTML += `<span><span class="legend-dot" style="background:${destColors[i]}"></span>${k} (${v})</span>`;
-        });
+        if (legendDest) {
+            destSorted.forEach(([k, v], i) => {
+                legendDest.innerHTML += `<span><span class="legend-dot" style="background:${destColors[i]}"></span>${k} (${v})</span>`;
+            });
+        }
 
-        new Chart(document.getElementById('chartDest'), {
-            type: 'doughnut',
-            data: {
-                labels: destSorted.map(d => d[0]),
-                datasets: [{ data: destSorted.map(d => d[1]), backgroundColor: destColors, borderWidth: 2, borderColor: '#fff' }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false, cutout: '62%',
-                plugins: { legend: { display: false } }
-            }
-        });
+        const chartDest = document.getElementById('chartDest');
+        if (chartDest) {
+            new Chart(chartDest, {
+                type: 'doughnut',
+                data: {
+                    labels: destSorted.map(d => d[0]),
+                    datasets: [{ data: destSorted.map(d => d[1]), backgroundColor: destColors, borderWidth: 2, borderColor: '#fff' }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, cutout: '62%',
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
 
         // ── PILOTES ──
         const pilotMap = {};
@@ -477,26 +495,31 @@
         const pilotColors = ['#993556', '#D4537E', '#ED93B1', '#F4C0D1'];
 
         const legendPilot = document.getElementById('legend-pilot');
-        pilotSorted.forEach(([k, v], i) => {
-            legendPilot.innerHTML += `<span><span class="legend-dot" style="background:${pilotColors[i % 4]}"></span>${k} (${v})</span>`;
-        });
+        if (legendPilot) {
+            pilotSorted.forEach(([k, v], i) => {
+                legendPilot.innerHTML += `<span><span class="legend-dot" style="background:${pilotColors[i % 4]}"></span>${k} (${v})</span>`;
+            });
+        }
 
-        new Chart(document.getElementById('chartPilot'), {
-            type: 'bar',
-            data: {
-                labels: pilotSorted.map(p => p[0]),
-                datasets: [{ label: 'Vols', data: pilotSorted.map(p => p[1]), backgroundColor: pilotColors.slice(0, pilotSorted.length), borderRadius: 4, borderSkipped: false }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { beginAtZero: true, grid: { color: 'rgba(153,53,86,0.07)' }, ticks: { stepSize: 1, font: { size: 11 } } },
-                    y: { grid: { display: false }, ticks: { font: { size: 11 } } }
+        const chartPilot = document.getElementById('chartPilot');
+        if (chartPilot) {
+            new Chart(chartPilot, {
+                type: 'bar',
+                data: {
+                    labels: pilotSorted.map(p => p[0]),
+                    datasets: [{ label: 'Vols', data: pilotSorted.map(p => p[1]), backgroundColor: pilotColors.slice(0, pilotSorted.length), borderRadius: 4, borderSkipped: false }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { beginAtZero: true, grid: { color: 'rgba(153,53,86,0.07)' }, ticks: { stepSize: 1, font: { size: 11 } } },
+                        y: { grid: { display: false }, ticks: { font: { size: 11 } } }
+                    }
                 }
-            }
-        });
+            });
+        }
 
         // ── HEURES CUMULÉES ──
         const sorted  = logs.slice().sort((a, b) => new Date(a.date_posted) - new Date(b.date_posted));
@@ -507,47 +530,54 @@
         });
         const cumData = sorted.map(l => { cum += parseFloat(l.duration || 0); return fmt(cum); });
 
-        new Chart(document.getElementById('chartCumul'), {
-            type: 'line',
-            data: {
-                labels: cumLabels,
-                datasets: [{
-                    label: 'Heures cumulées', data: cumData,
-                    borderColor: ROSE.soft, backgroundColor: 'rgba(237,147,177,0.15)',
-                    fill: true, tension: 0.4,
-                    pointRadius: 3, pointBackgroundColor: ROSE.soft
-                }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { grid: { display: false }, ticks: { font: { size: 10 }, maxTicksLimit: 10 } },
-                    y: { beginAtZero: true, grid: { color: 'rgba(153,53,86,0.07)' }, ticks: { font: { size: 11 } } }
+        const chartCumul = document.getElementById('chartCumul');
+        if (chartCumul) {
+            new Chart(chartCumul, {
+                type: 'line',
+                data: {
+                    labels: cumLabels,
+                    datasets: [{
+                        label: 'Heures cumulées', data: cumData,
+                        borderColor: ROSE.soft, backgroundColor: 'rgba(237,147,177,0.15)',
+                        fill: true, tension: 0.4,
+                        pointRadius: 3, pointBackgroundColor: ROSE.soft
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: { size: 10 }, maxTicksLimit: 10 } },
+                        y: { beginAtZero: true, grid: { color: 'rgba(153,53,86,0.07)' }, ticks: { font: { size: 11 } } }
+                    }
                 }
-            }
-        });
+            });
+        }
 
         // ── TABLEAU RÉCENTS ──
         const recent = logs.slice(-5).reverse();
-        document.getElementById('recent-count').textContent = `${recent.length} derniers`;
+        const recentCountEl = document.getElementById('recent-count');
+        if (recentCountEl) recentCountEl.textContent = `${recent.length} derniers`;
+        
         const tb = document.getElementById('table-body');
-        recent.forEach(l => {
-            const d = new Date(l.date_posted);
-            const dateStr = `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getFullYear()}`;
-            tb.innerHTML += `
-            <div class="table-row">
-                <span class="route-pill">
-                    <span class="airport">${l.origin}</span>
-                    <span class="arr">→</span>
-                    <span class="airport">${l.destination}</span>
-                </span>
-                <span class="muted">${l.pilot_name}</span>
-                <span class="dur">${fmt(parseFloat(l.duration))} h</span>
-                <span class="muted hide-mobile">${l.aircraft_tail_number}</span>
-                <span class="muted hide-mobile">${dateStr}</span>
-            </div>`;
-        });
+        if (tb) {
+            recent.forEach(l => {
+                const d = new Date(l.date_posted);
+                const dateStr = `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getFullYear()}`;
+                tb.innerHTML += `
+                <div class="table-row">
+                    <span class="route-pill">
+                        <span class="airport">${l.origin}</span>
+                        <span class="arr">→</span>
+                        <span class="airport">${l.destination}</span>
+                    </span>
+                    <span class="muted">${l.pilot_name}</span>
+                    <span class="dur">${fmt(parseFloat(l.duration))} h</span>
+                    <span class="muted hide-mobile">${l.aircraft_tail_number}</span>
+                    <span class="muted hide-mobile">${dateStr}</span>
+                </div>`;
+            });
+        }
     }
 </script>
 
