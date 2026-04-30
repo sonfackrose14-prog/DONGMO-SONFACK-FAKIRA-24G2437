@@ -1,33 +1,43 @@
 from flask import Flask, render_template, request, redirect, url_for
 from api.db import db
-from flask_migrate import Migrate
+from flask_migrate import Migrate, upgrade  # Import de 'upgrade' ajouté
 from api.model import FlightLog
 import os
 
 app = Flask(__name__, template_folder='../templates')
 
-# --- CONFIGURATION DYNAMIQUE ---
-# On essaie de récupérer l'URL, peu importe le nom donné par Vercel/Neon
+# --- CONFIGURATION DYNAMIQUE POSTGRES ---
+# On récupère l'URL de Neon (DATABASE_URL ou POSTGRES_URL)
 database_url = os.environ.get('DATABASE_URL') or os.environ.get('POSTGRES_URL')
 
 if not database_url:
-    raise RuntimeError("ERREUR : Aucune variable de base de données trouvée dans l'environnement Vercel.")
+    raise RuntimeError("ERREUR : Aucune variable DATABASE_URL trouvée sur Vercel.")
 
-# CRUCIAL : SQLAlchemy exige 'postgresql://' et non 'postgres://'
+# Correction du protocole pour SQLAlchemy (postgres -> postgresql)
 if database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql://", 1)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Configuration pour éviter les déconnexions avec Neon
+# Options pour stabiliser la connexion avec Neon
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_pre_ping': True,
-    'pool_recycle': 300,
+    'pool_recycle': 280,
 }
 
+# Initialisation
 db.init_app(app)
-Migrate(app, db)
+migrate = Migrate(app, db)
+
+# --- INITIALISATION AUTOMATIQUE DES TABLES ---
+# Cette partie remplace le besoin de faire 'flask db upgrade' manuellement
+with app.app_context():
+    try:
+        upgrade() 
+        print("Base de données mise à jour (Migrations appliquées).")
+    except Exception as e:
+        print(f"Note : Initialisation via upgrade a échoué (souvent normal si déjà fait) : {e}")
 
 # --- ROUTES ---
 
@@ -47,6 +57,7 @@ def list_flights():
 def submit_flight():
     if request.method == 'POST':
         try:
+            # Création de l'entrée pour l'application d'aviation
             instance = FlightLog(
                 origin=request.form.get("origin"),
                 destination=request.form.get("destination"),
@@ -63,6 +74,9 @@ def submit_flight():
             return f"Erreur d'enregistrement : {str(e)}", 500
     
     return render_template("index.html")
+
+# Configuration pour Vercel
+app.debug = False
 
 if __name__ == "__main__":
     app.run(debug=True)
